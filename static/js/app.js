@@ -52,7 +52,7 @@ d3.json("./samples.json").then(function(d) {
 
         Plotly.newPlot("bubble", data2, layout2);
 
-        // Display each key-value pair from the metadata JSON object somewhere on the page.   
+        // Display each key-value pair from the metadata JSON object somewhere on the page   
         var sampleMetadata = [d.metadata[0]];
         console.log(sampleMetadata);
         var selection = d3.select("#sample-metadata").selectAll("ul")
@@ -76,10 +76,71 @@ d3.json("./samples.json").then(function(d) {
 
     init();
 
-    // Loop through name in samples.json to fill in dropdown options
+
+    // Loop through names in samples.json to fill in dropdown options
     var options = ""
     for(var i = 0; i < d.names.length; i++) {
         options += `<option value="${i}">`+ d.names[i] +"</option>";
       }
       document.getElementById("selDataset").innerHTML = options;
+
+    
+    // Update all of the plots any time that a new sample is selected
+    d3.selectAll("#selDataset").on("change", optionChanged);
+
+    function optionChanged() {
+        var dropdownMenu = d3.select("#selDataset");
+        var id = +dropdownMenu.property("value");
+
+        var xBar = []
+        var yBar = []
+        var hovertextBar = []
+
+        var xBubble = []
+        var yBubble = []
+        var hovertextBubble = []
+
+        for(var i = 0; i < d.names.length; i++) {
+            if (id === i) {
+                var newSampleData = d.samples[i];
+                xBar = newSampleData.sample_values.slice(0,10).reverse();
+                yBar = newSampleData.otu_ids.map(d => {return `OTU ${d}`}).slice(0,10).reverse();
+                hovertextBar = newSampleData.otu_labels.slice(0,10).reverse();
+
+                xBubble = newSampleData.otu_ids;
+                yBubble = newSampleData.sample_values;
+                hovertextBubble = newSampleData.otu_labels;
+
+                // Also update the demographic info
+                var newSampleMetadata = [d.metadata[i]];
+            }
+        }
+
+        Plotly.restyle("bar", "x", [xBar]);
+        Plotly.restyle("bar", "y", [yBar]);
+        Plotly.restyle("bar", "hovertext", [hovertextBar]);
+
+        Plotly.restyle("bubble", "x", [xBubble]);
+        Plotly.restyle("bubble", "y", [yBubble]);
+        Plotly.restyle("bubble", "hovertext", [hovertextBubble]);
+
+        var newSelection = d3.select("#sample-metadata").selectAll("ul");
+        newSelection
+            .data(newSampleMetadata)
+            .enter()
+            .append("ul")
+            .html(function(data) {
+                return `<li>id: ${data.id}</li>
+                        <li>ethnicity: ${data.ethnicity}</li>
+                        <li>gender: ${data.gender}</li>
+                        <li>age: ${data.age}</li>
+                        <li>location: ${data.location}</li>
+                        <li>bbtype: ${data.bbtype}</li>
+                        <li>wfreq: ${data.wfreq}</li>`
+            });
+        selection.exit().remove();
+
+
+    };
+
 });
