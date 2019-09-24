@@ -47,16 +47,16 @@ d3.json("./samples.json").then(function(d) {
         var data2 = [trace2];
 
         var layout2 = {
-            xaxis: {title:"OTU ID"}
+            xaxis: {title:"OTU ID"},
+            title: "OTU ID vs Sample Values"
         };
 
         Plotly.newPlot("bubble", data2, layout2);
 
         // Display each key-value pair from the metadata JSON object somewhere on the page   
         var sampleMetadata = [d.metadata[0]];
-        console.log(sampleMetadata);
+        //console.log(sampleMetadata);
         var selection = d3.select("#sample-metadata").selectAll("ul")
-        //console.log(selection)
         selection
             .data(sampleMetadata)
             .enter()
@@ -70,8 +70,6 @@ d3.json("./samples.json").then(function(d) {
                     <li>bbtype: ${data.bbtype}</li>
                     <li>wfreq: ${data.wfreq}</li>`
             });
-        selection.exit().remove(); 
-
     }
 
     init();
@@ -100,6 +98,8 @@ d3.json("./samples.json").then(function(d) {
         var yBubble = []
         var hovertextBubble = []
 
+        var newSampleMetadata = []
+
         for(var i = 0; i < d.names.length; i++) {
             if (id === i) {
                 var newSampleData = d.samples[i];
@@ -112,7 +112,7 @@ d3.json("./samples.json").then(function(d) {
                 hovertextBubble = newSampleData.otu_labels;
 
                 // Also update the demographic info
-                var newSampleMetadata = [d.metadata[i]];
+                newSampleMetadata = [d.metadata[i]];
             }
         }
 
@@ -124,7 +124,12 @@ d3.json("./samples.json").then(function(d) {
         Plotly.restyle("bubble", "y", [yBubble]);
         Plotly.restyle("bubble", "hovertext", [hovertextBubble]);
 
+        // Select the html tag and remove the li created in init function
+        var temp = document.getElementById("sample-metadata");
+        temp.innerHTML = "";
+        // Reselect using d3 to add based on chosen id
         var newSelection = d3.select("#sample-metadata").selectAll("ul");
+        
         newSelection
             .data(newSampleMetadata)
             .enter()
@@ -138,8 +143,7 @@ d3.json("./samples.json").then(function(d) {
                         <li>bbtype: ${data.bbtype}</li>
                         <li>wfreq: ${data.wfreq}</li>`
             });
-        selection.exit().remove();
-
+        newSelection.exit().remove();
 
     };
 
